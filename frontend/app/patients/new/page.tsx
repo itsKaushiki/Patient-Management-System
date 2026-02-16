@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
 import { isAuthenticated } from '@/lib/auth';
+import { addActivity } from '@/lib/activity';
 import styles from './NewPatient.module.css';
 
 export default function NewPatientPage() {
@@ -41,6 +42,10 @@ export default function NewPatientPage() {
 
     try {
       await axiosClient.post('/api/patients', formData);
+
+      // Log activity
+      addActivity('created', formData.name);
+
       setSuccess(true);
       setTimeout(() => {
         router.push('/patients');

@@ -55,6 +55,29 @@
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
 }
 
+.deleteButton {
+  padding: 0.75rem 1.5rem;
+  background: var(--error);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.deleteButton:hover {
+  background: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.deleteButton:active {
+  transform: translateY(0);
+}
+
 .loading {
   text-align: center;
   padding: 4rem;

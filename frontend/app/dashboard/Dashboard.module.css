@@ -82,3 +82,177 @@
   color: white;
 }
 
+/* Dashboard Grid - 2 Cards Side by Side */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  max-width: 1400px;
+}
+
+@media (max-width: 968px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboardCard {
+  background: var(--card);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboardCard:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.cardLabel {
+  color: #64748B;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.5rem;
+}
+
+.cardNumber {
+  color: var(--primary);
+  font-size: 4rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.cardLoading {
+  color: #94A3B8;
+  font-size: 1rem;
+  text-align: center;
+  padding: 3rem 0;
+}
+
+/* Activity Timeline */
+.emptyActivity {
+  text-align: center;
+  color: #94A3B8;
+  padding: 3rem 1rem;
+  font-size: 0.9375rem;
+}
+
+.activityTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.activityTimeline::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activityTimeline::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: 3px;
+}
+
+.activityTimeline::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+.activityTimeline::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+.activityRow {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  position: relative;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.activityRow:hover {
+  background: var(--background);
+}
+
+.activityRow:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 2.5rem;
+  bottom: -1rem;
+  width: 2px;
+  background: #E2E8F0;
+}
+
+.activityDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.dotGreen {
+  background: #10B981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.dotBlue {
+  background: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.dotRed {
+  background: #EF4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.activityDetails {
+  flex: 1;
+}
+
+.activityText {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+}
+
+.activityTime {
+  color: #64748B;
+  font-size: 0.8125rem;
+}
+
+.sectionTitle {
+  color: var(--text);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* Navigation Section */
+.navSection {
+  margin-bottom: 2rem;
+}
+

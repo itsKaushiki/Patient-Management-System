@@ -35,6 +35,13 @@ build/
 # Node modules (if using Node.js with Java)
 node_modules/
 
+# Next.js (Frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.env*.local
+
 # VS Code
 .vscode/
 

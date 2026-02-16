@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
+import { addActivity } from '@/lib/activity';
+import DeleteModal from '@/components/DeleteModal';
 import styles from './PatientDetails.module.css';
 
 interface Patient {
@@ -22,6 +24,9 @@ export default function PatientDetailsPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -68,6 +73,39 @@ export default function PatientDetailsPage() {
     );
   }
 
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+    setDeleteError('');
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!patient) return;
+
+    setDeleting(true);
+    setDeleteError('');
+
+    try {
+      await axiosClient.delete(`/api/patients/${patientId}`);
+
+      // Log activity
+      addActivity('deleted', patient.name);
+
+      // Close modal and redirect
+      setShowDeleteModal(false);
+      router.push('/patients');
+    } catch (err: any) {
+      console.error('Error deleting patient:', err);
+      setDeleteError('Failed to delete patient. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setDeleteError('');
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -87,6 +125,9 @@ export default function PatientDetailsPage() {
           <Link href={`/patients/${patientId}/edit`} className={styles.editButton}>
             Edit Patient
           </Link>
+          <button onClick={handleDeleteClick} className={styles.deleteButton}>
+            Delete Patient
+          </button>
         </div>
       </div>
 
@@ -129,6 +170,17 @@ export default function PatientDetailsPage() {
           </p>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && patient && (
+        <DeleteModal
+          patientName={patient.name}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          loading={deleting}
+          error={deleteError}
+        />
+      )}
     </div>
   );
 }

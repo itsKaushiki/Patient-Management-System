@@ -18,7 +18,10 @@ interface Patient {
 
 export default function PatientsPage() {
   const router = useRouter();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [allPatients, setAllPatients] = useState<Patient[]>([]);
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [displayCount, setDisplayCount] = useState(5);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,7 +34,8 @@ export default function PatientsPage() {
     const fetchPatients = async () => {
       try {
         const response = await axiosClient.get('/api/patients');
-        setPatients(response.data);
+        setAllPatients(response.data);
+        setFilteredPatients(response.data);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load patients');
       } finally {
@@ -41,6 +45,31 @@ export default function PatientsPage() {
 
     fetchPatients();
   }, [router]);
+
+  // Handle search filtering
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredPatients(allPatients);
+      setDisplayCount(5);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = allPatients.filter(
+      (patient) =>
+        patient.name.toLowerCase().includes(query) ||
+        patient.email.toLowerCase().includes(query)
+    );
+    setFilteredPatients(filtered);
+    setDisplayCount(5); // Reset pagination when searching
+  }, [searchQuery, allPatients]);
+
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + 5);
+  };
+
+  const patientsToDisplay = filteredPatients.slice(0, displayCount);
+  const hasMore = displayCount < filteredPatients.length;
 
   if (!isAuthenticated()) {
     return null;
@@ -64,13 +93,33 @@ export default function PatientsPage() {
 
       {error && <div className={styles.error}>{error}</div>}
 
-      {!loading && !error && patients.length === 0 && (
+      {!loading && !error && allPatients.length === 0 && (
         <div className={styles.empty}>No patients found. Add your first patient!</div>
       )}
 
-      {!loading && !error && patients.length > 0 && (
-        <div className={styles.grid}>
-          {patients.map((patient) => (
+      {!loading && !error && allPatients.length > 0 && (
+        <>
+          {/* Search Bar */}
+          <div className={styles.searchContainer}>
+            <input
+              type="text"
+              placeholder="Search by name or email"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
+
+          {/* Empty search state */}
+          {filteredPatients.length === 0 && (
+            <div className={styles.empty}>No patients match your search</div>
+          )}
+
+          {/* Patient Grid */}
+          {filteredPatients.length > 0 && (
+            <>
+              <div className={styles.grid}>
+                {patientsToDisplay.map((patient) => (
             <div
               key={patient.id}
               className={styles.card}
@@ -94,7 +143,19 @@ export default function PatientsPage() {
             </div>
           ))}
         </div>
-      )}
+
+        {/* Load More Button */}
+        {hasMore && (
+          <div className={styles.loadMoreContainer}>
+            <button onClick={handleLoadMore} className={styles.loadMoreButton}>
+              Load More
+            </button>
+          </div>
+        )}
+      </>
+    )}
+  </>
+)}
     </div>
   );
 }
