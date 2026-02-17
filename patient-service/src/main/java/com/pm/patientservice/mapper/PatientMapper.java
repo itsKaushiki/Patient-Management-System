@@ -13,6 +13,8 @@ public class PatientMapper {
     patientDTO.setAddress(patient.getAddress());
     patientDTO.setEmail(patient.getEmail());
     patientDTO.setDateOfBirth(patient.getDateOfBirth().toString());
+    patientDTO.setGender(patient.getGender());
+    patientDTO.setBloodGroup(patient.getBloodGroup());
 
     return patientDTO;
   }
@@ -24,6 +26,8 @@ public class PatientMapper {
     patient.setEmail(patientRequestDTO.getEmail());
     patient.setDateOfBirth(LocalDate.parse(patientRequestDTO.getDateOfBirth()));
     patient.setRegisteredDate(LocalDate.parse(patientRequestDTO.getRegisteredDate()));
+    patient.setGender(patientRequestDTO.getGender());
+    patient.setBloodGroup(patientRequestDTO.getBloodGroup());
     return patient;
   }
 }

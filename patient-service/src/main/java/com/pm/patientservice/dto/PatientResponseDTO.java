@@ -6,6 +6,8 @@ public class PatientResponseDTO {
   private String email;
   private String address;
   private String dateOfBirth;
+  private String gender;
+  private String bloodGroup;
 
   public String getId() {
     return id;
@@ -47,5 +49,20 @@ public class PatientResponseDTO {
     this.dateOfBirth = dateOfBirth;
   }
 
+  public String getGender() {
+    return gender;
+  }
+
+  public void setGender(String gender) {
+    this.gender = gender;
+  }
+
+  public String getBloodGroup() {
+    return bloodGroup;
+  }
+
+  public void setBloodGroup(String bloodGroup) {
+    this.bloodGroup = bloodGroup;
+  }
 
 }

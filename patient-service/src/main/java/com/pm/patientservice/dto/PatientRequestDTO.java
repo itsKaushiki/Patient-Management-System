@@ -1,6 +1,8 @@
 package com.pm.patientservice.dto;
 
 import com.pm.patientservice.dto.validators.CreatePatientValidationGroup;
+import com.pm.patientservice.dto.validators.ValidBloodGroup;
+import com.pm.patientservice.dto.validators.ValidGender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -24,6 +26,12 @@ public class PatientRequestDTO {
   @NotBlank(groups = CreatePatientValidationGroup.class, message =
       "Registered date is required")
   private String registeredDate;
+
+  @ValidGender
+  private String gender;
+
+  @ValidBloodGroup
+  private String bloodGroup;
 
   public @NotBlank(message = "Name is required") @Size(max = 100, message = "Name cannot exceed 100 characters") String getName() {
     return name;
@@ -67,6 +75,22 @@ public class PatientRequestDTO {
 
   public void setRegisteredDate(String registeredDate) {
     this.registeredDate = registeredDate;
+  }
+
+  public String getGender() {
+    return gender;
+  }
+
+  public void setGender(String gender) {
+    this.gender = gender;
+  }
+
+  public String getBloodGroup() {
+    return bloodGroup;
+  }
+
+  public void setBloodGroup(String bloodGroup) {
+    this.bloodGroup = bloodGroup;
   }
 
 }

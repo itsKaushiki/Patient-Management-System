@@ -14,6 +14,8 @@ interface Patient {
   email: string;
   address: string;
   dateOfBirth: string;
+  gender?: string;
+  bloodGroup?: string;
 }
 
 export default function PatientDetailsPage() {
@@ -87,8 +89,8 @@ export default function PatientDetailsPage() {
     try {
       await axiosClient.delete(`/api/patients/${patientId}`);
 
-      // Log activity
-      addActivity('deleted', patient.name);
+      // Log activity with patient ID
+      addActivity('deleted', patient.name, patientId);
 
       // Close modal and redirect
       setShowDeleteModal(false);
@@ -154,6 +156,14 @@ export default function PatientDetailsPage() {
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Date of Birth</span>
               <span className={styles.infoValue}>{patient.dateOfBirth}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Gender</span>
+              <span className={styles.infoValue}>{patient.gender || 'Not specified'}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Blood Group</span>
+              <span className={styles.infoValue}>{patient.bloodGroup || 'Not specified'}</span>
             </div>
           </div>
         </div>

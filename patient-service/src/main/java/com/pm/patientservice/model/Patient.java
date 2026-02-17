@@ -33,6 +33,11 @@ public class Patient {
   @NotNull
   private LocalDate registeredDate;
 
+  private String gender;
+
+  @Column(length = 3)
+  private String bloodGroup;
+
   public UUID getId() {
     return id;
   }
@@ -79,6 +84,22 @@ public class Patient {
 
   public void setRegisteredDate(@NotNull LocalDate registeredDate) {
     this.registeredDate = registeredDate;
+  }
+
+  public String getGender() {
+    return gender;
+  }
+
+  public void setGender(String gender) {
+    this.gender = gender;
+  }
+
+  public String getBloodGroup() {
+    return bloodGroup;
+  }
+
+  public void setBloodGroup(String bloodGroup) {
+    this.bloodGroup = bloodGroup;
   }
 
 }

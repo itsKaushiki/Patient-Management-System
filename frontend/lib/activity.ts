@@ -2,18 +2,20 @@ export interface Activity {
   type: 'created' | 'updated' | 'deleted';
   name: string;
   timestamp: number;
+  patientId?: string; // Optional for backward compatibility
 }
 
 const ACTIVITY_KEY = 'patient_activities';
 const MAX_ACTIVITIES = 50; // Keep last 50 activities
 
-export function addActivity(type: Activity['type'], name: string): void {
+export function addActivity(type: Activity['type'], name: string, patientId?: string): void {
   if (typeof window === 'undefined') return;
 
   const activity: Activity = {
     type,
     name,
     timestamp: Date.now(),
+    ...(patientId && { patientId }), // Only add patientId if provided
   };
 
   const activities = getActivities();

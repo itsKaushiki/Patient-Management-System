@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
 import { isAuthenticated } from '@/lib/auth';
+import ClientOnly from '@/components/ClientOnly';
 import styles from './Patients.module.css';
 
 interface Patient {
@@ -76,7 +77,8 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <ClientOnly>
+      <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Patients</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
@@ -156,7 +158,8 @@ export default function PatientsPage() {
     )}
   </>
 )}
-    </div>
+      </div>
+    </ClientOnly>
   );
 }
 

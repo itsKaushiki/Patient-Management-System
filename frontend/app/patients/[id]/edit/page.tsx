@@ -12,6 +12,8 @@ interface PatientFormData {
   email: string;
   address: string;
   dateOfBirth: string;
+  gender: string;
+  bloodGroup: string;
 }
 
 export default function EditPatientPage() {
@@ -24,6 +26,8 @@ export default function EditPatientPage() {
     email: '',
     address: '',
     dateOfBirth: '',
+    gender: '',
+    bloodGroup: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -42,6 +46,8 @@ export default function EditPatientPage() {
           email: patient.email,
           address: patient.address,
           dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender || '',
+          bloodGroup: patient.bloodGroup || '',
         });
       } catch (err: any) {
         console.error('Error fetching patient:', err);
@@ -56,7 +62,7 @@ export default function EditPatientPage() {
     }
   }, [patientId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -73,8 +79,8 @@ export default function EditPatientPage() {
     try {
       await axiosClient.put(`/api/patients/${patientId}`, formData);
 
-      // Log activity
-      addActivity('updated', formData.name);
+      // Log activity with patient ID
+      addActivity('updated', formData.name, patientId);
 
       setSuccess('Patient updated successfully!');
       setTimeout(() => {
@@ -177,6 +183,50 @@ export default function EditPatientPage() {
               required
               disabled={submitting}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="gender" className={styles.label}>
+              Gender
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className={styles.input}
+              disabled={submitting}
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="bloodGroup" className={styles.label}>
+              Blood Group
+            </label>
+            <select
+              id="bloodGroup"
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleChange}
+              className={styles.input}
+              disabled={submitting}
+            >
+              <option value="">Select Blood Group</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
           </div>
 
           <div className={styles.actions}>

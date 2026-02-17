@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { isAuthenticated, removeToken } from '@/lib/auth';
 import axiosClient from '@/lib/axios';
 import { getRecentActivities, formatActivityMessage, getRelativeTime, Activity } from '@/lib/activity';
+import ClientOnly from '@/components/ClientOnly';
 import styles from './Dashboard.module.css';
 
 interface Patient {
@@ -41,12 +42,12 @@ export default function DashboardPage() {
 
     fetchPatients();
 
-    // Load activities initially
-    setActivities(getRecentActivities(10));
+    // Load activities initially (only 3 for preview)
+    setActivities(getRecentActivities(3));
 
     // Auto-refresh activities every 5 seconds
     const interval = setInterval(() => {
-      setActivities(getRecentActivities(10));
+      setActivities(getRecentActivities(3));
     }, 5000);
 
     return () => clearInterval(interval);
@@ -88,72 +89,81 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Patient Management System</h1>
-        <p className={styles.subtitle}>System monitoring console</p>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
-      </div>
-
-      {/* Dashboard Grid - 2 Cards Side by Side */}
-      <div className={styles.dashboardGrid}>
-        {/* Total Patients Card */}
-        <div className={styles.dashboardCard}>
-          <h3 className={styles.cardLabel}>Total Patients</h3>
-          {loading ? (
-            <div className={styles.cardLoading}>Loading...</div>
-          ) : (
-            <div className={styles.cardNumber}>{totalPatients}</div>
-          )}
+    <ClientOnly>
+      <div className={styles.pageContainer}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Patient Management System</h1>
+          <p className={styles.subtitle}>System monitoring console</p>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
         </div>
 
-        {/* Activity Timeline Card */}
-        <div className={styles.dashboardCard}>
-          <h3 className={styles.cardLabel}>Recent Activity</h3>
-          {activities.length === 0 ? (
-            <div className={styles.emptyActivity}>No system activity yet</div>
-          ) : (
-            <div className={styles.activityTimeline}>
-              {activities.map((activity, index) => (
-                <div key={index} className={styles.activityRow}>
-                  <div className={`${styles.activityDot} ${getActivityDotClass(activity.type)}`}></div>
-                  <div className={styles.activityDetails}>
-                    <div className={styles.activityText}>
-                      {formatActivityText(activity)}
-                    </div>
-                    <div className={styles.activityTime}>
-                      {getRelativeTime(activity.timestamp)}
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Dashboard Stats Grid */}
+        <div className={styles.dashboardGrid}>
+          {/* Total Patients Card */}
+          <div className={styles.dashboardCard}>
+            <h3 className={styles.cardLabel}>Total Patients</h3>
+            <div className={styles.statValueContainer}>
+              {loading ? (
+                <div className={styles.cardLoading}>Loading...</div>
+              ) : (
+                <div className={styles.cardNumber}>{totalPatients}</div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Activity Timeline Card */}
+          <div className={styles.dashboardCard}>
+            <h3 className={styles.cardLabel}>Recent Activity</h3>
+            {activities.length === 0 ? (
+              <div className={styles.emptyActivity}>No system activity yet</div>
+            ) : (
+              <div className={styles.activityContent}>
+                <div className={styles.activityPreview}>
+                  {activities.slice(0, 3).map((activity, index) => (
+                    <div key={index} className={styles.activityRow}>
+                      <div className={`${styles.activityDot} ${getActivityDotClass(activity.type)}`}></div>
+                      <div className={styles.activityDetails}>
+                        <div className={styles.activityText}>
+                          {formatActivityText(activity)}
+                        </div>
+                        <div className={styles.activityTime}>
+                          {getRelativeTime(activity.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/activity" className={styles.viewTimelineLink}>
+                  View full timeline →
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className={styles.navSection}>
+          <h2 className={styles.sectionTitle}>Quick Actions</h2>
+          <div className={styles.quickActionsGrid}>
+            <Link href="/patients" className={styles.navCard}>
+              <h2 className={styles.navTitle}>View Patients</h2>
+              <p className={styles.navDescription}>
+                Browse and search through all registered patients
+              </p>
+            </Link>
+
+            <Link href="/patients/new" className={styles.navCard}>
+              <h2 className={styles.navTitle}>Add New Patient</h2>
+              <p className={styles.navDescription}>
+                Register a new patient in the system
+              </p>
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Navigation Cards */}
-      <div className={styles.navSection}>
-        <h2 className={styles.sectionTitle}>Quick Actions</h2>
-        <div className={styles.nav}>
-          <Link href="/patients" className={styles.navCard}>
-            <h2 className={styles.navTitle}>View Patients</h2>
-            <p className={styles.navDescription}>
-              Browse and search through all registered patients
-            </p>
-          </Link>
-
-          <Link href="/patients/new" className={styles.navCard}>
-            <h2 className={styles.navTitle}>Add New Patient</h2>
-            <p className={styles.navDescription}>
-              Register a new patient in the system
-            </p>
-          </Link>
-        </div>
-      </div>
-    </div>
+    </ClientOnly>
   );
 }
 

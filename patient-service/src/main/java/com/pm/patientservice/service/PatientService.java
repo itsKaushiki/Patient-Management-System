@@ -70,6 +70,8 @@ public class PatientService {
     patient.setAddress(patientRequestDTO.getAddress());
     patient.setEmail(patientRequestDTO.getEmail());
     patient.setDateOfBirth(LocalDate.parse(patientRequestDTO.getDateOfBirth()));
+    patient.setGender(patientRequestDTO.getGender());
+    patient.setBloodGroup(patientRequestDTO.getBloodGroup());
 
     Patient updatedPatient = patientRepository.save(patient);
     return PatientMapper.toDTO(updatedPatient);

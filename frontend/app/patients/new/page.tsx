@@ -16,6 +16,8 @@ export default function NewPatientPage() {
     address: '',
     dateOfBirth: '',
     registeredDate: new Date().toISOString().split('T')[0],
+    gender: '',
+    bloodGroup: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +29,7 @@ export default function NewPatientPage() {
     }
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -41,10 +43,11 @@ export default function NewPatientPage() {
     setLoading(true);
 
     try {
-      await axiosClient.post('/api/patients', formData);
+      const response = await axiosClient.post('/api/patients', formData);
+      const createdPatient = response.data;
 
-      // Log activity
-      addActivity('created', formData.name);
+      // Log activity with patient ID
+      addActivity('created', formData.name, createdPatient.id);
 
       setSuccess(true);
       setTimeout(() => {
@@ -153,6 +156,50 @@ export default function NewPatientPage() {
               required
               disabled={loading || success}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="gender" className={styles.label}>
+              Gender
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className={styles.input}
+              disabled={loading || success}
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="bloodGroup" className={styles.label}>
+              Blood Group
+            </label>
+            <select
+              id="bloodGroup"
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleChange}
+              className={styles.input}
+              disabled={loading || success}
+            >
+              <option value="">Select Blood Group</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
           </div>
 
           <div className={styles.buttonGroup}>

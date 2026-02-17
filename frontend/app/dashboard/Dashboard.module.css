@@ -1,6 +1,13 @@
-.container {
+/* Master Page Container - Controls all dashboard width */
+.pageContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: 100%;
   min-height: 100vh;
-  padding: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 .header {
@@ -10,6 +17,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
   transition: box-shadow 0.2s ease;
+  width: 100%;
 }
 
 .header:hover {
@@ -27,11 +35,10 @@
   font-weight: 400;
 }
 
-.nav {
+.quickActionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  max-width: 1200px;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
 }
 
 .navCard {
@@ -42,6 +49,7 @@
   transition: all 0.25s ease;
   border: 1px solid var(--border);
   cursor: pointer;
+  width: 100%;
 }
 
 .navCard:hover {
@@ -82,19 +90,13 @@
   color: white;
 }
 
-/* Dashboard Grid - 2 Cards Side by Side */
+/* Dashboard Stats Grid */
 .dashboardGrid {
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 1.5rem;
+  gap: 24px;
   margin-bottom: 2.5rem;
-  max-width: 1400px;
-}
-
-@media (max-width: 968px) {
-  .dashboardGrid {
-    grid-template-columns: 1fr;
-  }
+  align-items: stretch;
 }
 
 .dashboardCard {
@@ -105,6 +107,9 @@
   border: 1px solid var(--border);
   transition: all 0.25s ease;
   animation: fadeIn 0.4s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -131,54 +136,71 @@
   margin-bottom: 1.5rem;
 }
 
+/* Stat Value Container - Centers the number vertically */
+.statValueContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .cardNumber {
   color: var(--primary);
   font-size: 4rem;
   font-weight: 700;
   text-align: center;
-  margin: 2rem 0;
 }
 
 .cardLoading {
   color: #94A3B8;
   font-size: 1rem;
   text-align: center;
-  padding: 3rem 0;
 }
 
 /* Activity Timeline */
 .emptyActivity {
-  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #94A3B8;
-  padding: 3rem 1rem;
   font-size: 0.9375rem;
 }
 
-.activityTimeline {
+/* Activity Content Wrapper */
+.activityContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Activity Preview (Dashboard Widget) */
+.activityPreview {
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-height: 500px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
+  flex: 1;
 }
 
-.activityTimeline::-webkit-scrollbar {
-  width: 6px;
+.viewTimelineLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748B;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  margin-top: auto;
+  align-self: flex-end;
 }
 
-.activityTimeline::-webkit-scrollbar-track {
-  background: var(--background);
-  border-radius: 3px;
-}
-
-.activityTimeline::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 3px;
-}
-
-.activityTimeline::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+.viewTimelineLink:hover {
+  color: #2563EB;
+  background: rgba(37, 99, 235, 0.05);
+  transform: translateX(4px);
 }
 
 .activityRow {
@@ -254,5 +276,13 @@
 /* Navigation Section */
 .navSection {
   margin-bottom: 2rem;
+}
+
+/* Responsive Layout */
+@media (max-width: 900px) {
+  .dashboardGrid,
+  .quickActionsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
