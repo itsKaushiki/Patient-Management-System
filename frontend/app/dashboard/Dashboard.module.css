@@ -1,0 +1,312 @@
+/* Master Page Container - Controls all dashboard width */
+.pageContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.header {
+  background: var(--card);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.header:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.quickActionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.navCard {
+  background: var(--card);
+  padding: 2rem;
+  border-radius: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  width: 100%;
+}
+
+.navCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--primary);
+}
+
+.navCard:active {
+  transform: translateY(-2px);
+}
+
+.navTitle {
+  color: var(--primary);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.navDescription {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.logoutButton {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.logoutButton:hover {
+  background: var(--error);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Dashboard Stats Grid */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  margin-bottom: 2.5rem;
+  align-items: stretch;
+}
+
+.dashboardCard {
+  background: var(--card);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  animation: fadeIn 0.4s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboardCard:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.cardLabel {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.5rem;
+}
+
+/* Stat Value Container - Centers the number vertically */
+.statValueContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardNumber {
+  color: var(--primary);
+  font-size: 4rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cardLoading {
+  color: var(--text-muted);
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Activity Timeline */
+.emptyActivity {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+/* Activity Content Wrapper */
+.activityContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Activity Preview (Dashboard Widget) */
+.activityPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.viewTimelineLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin-top: auto;
+  align-self: flex-end;
+}
+
+.viewTimelineLink:hover {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.05);
+  transform: translateX(4px);
+}
+
+.activityRow {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  position: relative;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.activityRow:hover {
+  background: var(--background);
+}
+
+.activityRow:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 2.5rem;
+  bottom: -1rem;
+  width: 2px;
+  background: #E2E8F0;
+}
+
+.activityDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.dotGreen {
+  background: #10B981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.dotBlue {
+  background: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.dotRed {
+  background: #EF4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.activityDetails {
+  flex: 1;
+}
+
+.activityText {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+}
+
+.activityTime {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.sectionTitle {
+  color: var(--text);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* Navigation Section */
+.navSection {
+  margin-bottom: 2rem;
+}
+
+/* Responsive Layout */
+@media (max-width: 900px) {
+  .dashboardGrid,
+  .quickActionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
