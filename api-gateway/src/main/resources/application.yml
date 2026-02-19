@@ -35,3 +35,11 @@ spring:
             - Path=/api-docs/auth
           filters:
             - RewritePath=/api-docs/auth,/v3/api-docs
+
+        # Route for /analytics/** to analytics-service
+        - id: analytics-service-route
+          uri: http://localhost:4002
+          predicates:
+            - Path=/analytics/**
+          filters:
+            - StripPrefix=0

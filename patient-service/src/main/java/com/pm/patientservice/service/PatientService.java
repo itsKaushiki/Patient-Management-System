@@ -74,10 +74,22 @@ public class PatientService {
     patient.setBloodGroup(patientRequestDTO.getBloodGroup());
 
     Patient updatedPatient = patientRepository.save(patient);
+
+    // Send Kafka event for patient update
+    kafkaProducer.sendEvent(updatedPatient, "PATIENT_UPDATED");
+
     return PatientMapper.toDTO(updatedPatient);
   }
 
   public void deletePatient(UUID id) {
+    // Fetch patient before deletion to send Kafka event
+    Patient patient = patientRepository.findById(id).orElseThrow(
+        () -> new PatientNotFoundException("Patient not found with ID: " + id));
+
+    // Send Kafka event for patient deletion
+    kafkaProducer.sendEvent(patient, "PATIENT_DELETED");
+
+    // Delete the patient
     patientRepository.deleteById(id);
   }
 

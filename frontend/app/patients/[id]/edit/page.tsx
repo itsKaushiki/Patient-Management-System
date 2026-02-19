@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
-import { addActivity } from '@/lib/activity';
 import styles from './EditPatient.module.css';
 
 interface PatientFormData {
@@ -79,8 +78,7 @@ export default function EditPatientPage() {
     try {
       await axiosClient.put(`/api/patients/${patientId}`, formData);
 
-      // Log activity with patient ID
-      addActivity('updated', formData.name, patientId);
+      // Activity is automatically logged via Kafka
 
       setSuccess('Patient updated successfully!');
       setTimeout(() => {

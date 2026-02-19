@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isAuthenticated } from '@/lib/auth';
-import { getActivities, getRelativeTime, Activity } from '@/lib/activity';
+import { getAllActivities, getRelativeTime, getActivityType, Activity } from '@/lib/activity';
 import ClientOnly from '@/components/ClientOnly';
 import styles from './Activity.module.css';
 
@@ -18,12 +18,17 @@ export default function ActivityPage() {
       return;
     }
 
+    const fetchActivities = async () => {
+      const activities = await getAllActivities();
+      setActivities(activities);
+    };
+
     // Load all activities
-    setActivities(getActivities());
+    fetchActivities();
 
     // Auto-refresh activities every 5 seconds
     const interval = setInterval(() => {
-      setActivities(getActivities());
+      fetchActivities();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -33,7 +38,7 @@ export default function ActivityPage() {
     return null;
   }
 
-  const getActivityDotClass = (type: Activity['type']) => {
+  const getActivityDotClass = (type: 'created' | 'updated' | 'deleted') => {
     switch (type) {
       case 'created':
         return styles.dotGreen;
@@ -47,22 +52,25 @@ export default function ActivityPage() {
   };
 
   const formatActivityText = (activity: Activity) => {
-    switch (activity.type) {
-      case 'created':
-        return `${activity.name} was registered`;
-      case 'updated':
-        return `${activity.name} was updated`;
-      case 'deleted':
-        return `${activity.name} was deleted`;
-      default:
-        return activity.name;
+    const eventType = activity.eventType.toLowerCase();
+
+    if (eventType.includes('created')) {
+      return `${activity.patientName} was registered`;
+    } else if (eventType.includes('updated')) {
+      return `${activity.patientName} was updated`;
+    } else if (eventType.includes('deleted')) {
+      return `${activity.patientName} was deleted`;
     }
+
+    return activity.patientName;
   };
 
+  // Note: Backend doesn't return patientId yet, so click navigation is disabled for now
   const handleActivityClick = (activity: Activity) => {
-    if (activity.patientId) {
-      router.push(`/patients/${activity.patientId}`);
-    }
+    // Future: Navigate to patient details when patientId is available
+    // if (activity.patientId) {
+    //   router.push(`/patients/${activity.patientId}`);
+    // }
   };
 
   return (
@@ -90,10 +98,10 @@ export default function ActivityPage() {
               {activities.map((activity, index) => (
                 <div
                   key={index}
-                  className={`${styles.timelineItem} ${activity.patientId ? styles.clickable : ''}`}
+                  className={styles.timelineItem}
                   onClick={() => handleActivityClick(activity)}
                 >
-                  <div className={`${styles.timelineDot} ${getActivityDotClass(activity.type)}`}></div>
+                  <div className={`${styles.timelineDot} ${getActivityDotClass(getActivityType(activity))}`}></div>
                   <div className={styles.timelineContent}>
                     <div className={styles.activityText}>
                       {formatActivityText(activity)}

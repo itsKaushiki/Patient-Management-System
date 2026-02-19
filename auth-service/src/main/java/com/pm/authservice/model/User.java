@@ -21,7 +21,10 @@ public class User {
   @Column(nullable = false)
   private String password;
 
-  @Column(nullable = false)
+  @Column(nullable = true) // Nullable for backward compatibility with existing users
+  private String name;
+
+  @Column(nullable = true) // Nullable for backward compatibility with existing users
   private String role;
 
   public UUID getId() {
@@ -48,11 +51,31 @@ public class User {
     this.password = password;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   public String getRole() {
     return role;
   }
 
   public void setRole(String role) {
     this.role = role;
+  }
+
+  // Helper method to get Role enum with fallback to ADMIN for null values
+  public Role getRoleEnum() {
+    if (role == null) {
+      return Role.ADMIN; // Fallback for existing users
+    }
+    try {
+      return Role.valueOf(role);
+    } catch (IllegalArgumentException e) {
+      return Role.ADMIN; // Fallback for invalid values
+    }
   }
 }

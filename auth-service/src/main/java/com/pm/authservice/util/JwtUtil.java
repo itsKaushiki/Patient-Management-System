@@ -1,5 +1,6 @@
 package com.pm.authservice.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -43,5 +44,23 @@ public class JwtUtil {
     } catch (JwtException e) {
       throw new JwtException("Invalid JWT");
     }
+  }
+
+  public String getEmailFromToken(String token) {
+    Claims claims = Jwts.parser()
+        .verifyWith((SecretKey) secretKey)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
+    return claims.getSubject();
+  }
+
+  public String getRoleFromToken(String token) {
+    Claims claims = Jwts.parser()
+        .verifyWith((SecretKey) secretKey)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
+    return claims.get("role", String.class);
   }
 }

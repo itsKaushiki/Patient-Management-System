@@ -1,72 +1,65 @@
+import axiosClient from './axios';
+
 export interface Activity {
-  type: 'created' | 'updated' | 'deleted';
-  name: string;
-  timestamp: number;
-  patientId?: string; // Optional for backward compatibility
+  eventType: string;
+  patientName: string;
+  patientEmail: string;
+  timestamp: string; // ISO 8601 format from backend
 }
 
-const ACTIVITY_KEY = 'patient_activities';
-const MAX_ACTIVITIES = 50; // Keep last 50 activities
-
-export function addActivity(type: Activity['type'], name: string, patientId?: string): void {
-  if (typeof window === 'undefined') return;
-
-  const activity: Activity = {
-    type,
-    name,
-    timestamp: Date.now(),
-    ...(patientId && { patientId }), // Only add patientId if provided
-  };
-
-  const activities = getActivities();
-  activities.unshift(activity); // Add to beginning
-
-  // Keep only last MAX_ACTIVITIES
-  const trimmed = activities.slice(0, MAX_ACTIVITIES);
-
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(trimmed));
-}
-
-export function getActivities(): Activity[] {
-  if (typeof window === 'undefined') return [];
-
+// Fetch recent activities from backend
+export async function getRecentActivities(limit: number = 10): Promise<Activity[]> {
   try {
-    const stored = localStorage.getItem(ACTIVITY_KEY);
-    if (!stored) return [];
-
-    const activities = JSON.parse(stored);
-    return Array.isArray(activities) ? activities : [];
+    const response = await axiosClient.get(`/analytics/audit/recent?limit=${limit}`);
+    return response.data;
   } catch (error) {
-    console.error('Failed to load activities:', error);
+    console.error('Failed to fetch recent activities:', error);
     return [];
   }
 }
 
-export function clearActivities(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(ACTIVITY_KEY);
-}
-
-export function getRecentActivities(limit: number = 10): Activity[] {
-  return getActivities().slice(0, limit);
-}
-
-export function formatActivityMessage(activity: Activity): string {
-  switch (activity.type) {
-    case 'created':
-      return `Patient ${activity.name} registered`;
-    case 'updated':
-      return `Patient ${activity.name} updated`;
-    case 'deleted':
-      return `Patient ${activity.name} deleted`;
-    default:
-      return `Patient ${activity.name}`;
+// Fetch all activities from backend
+export async function getAllActivities(): Promise<Activity[]> {
+  try {
+    const response = await axiosClient.get('/analytics/audit/recent?limit=100');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch activities:', error);
+    return [];
   }
 }
 
-export function getRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
+// Fetch patient-specific activities
+export async function getPatientActivities(patientId: string): Promise<Activity[]> {
+  try {
+    const response = await axiosClient.get(`/analytics/audit/patient/${patientId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch patient activities:', error);
+    return [];
+  }
+}
+
+// Format activity message based on event type
+export function formatActivityMessage(activity: Activity): string {
+  const eventType = activity.eventType.toLowerCase();
+
+  if (eventType.includes('created')) {
+    return `${activity.patientName} was registered`;
+  } else if (eventType.includes('updated')) {
+    return `${activity.patientName} was updated`;
+  } else if (eventType.includes('deleted')) {
+    return `${activity.patientName} was deleted`;
+  }
+
+  return `${activity.patientName}`;
+}
+
+// Get relative time from ISO timestamp
+export function getRelativeTime(timestamp: string): string {
+  const now = new Date().getTime();
+  const eventTime = new Date(timestamp).getTime();
+  const diff = now - eventTime;
 
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -77,5 +70,16 @@ export function getRelativeTime(timestamp: number): string {
   if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
   return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
+
+// Get activity type for styling
+export function getActivityType(activity: Activity): 'created' | 'updated' | 'deleted' {
+  const eventType = activity.eventType.toLowerCase();
+
+  if (eventType.includes('created')) return 'created';
+  if (eventType.includes('updated')) return 'updated';
+  if (eventType.includes('deleted')) return 'deleted';
+
+  return 'created'; // default
 }
 

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
 import { isAuthenticated } from '@/lib/auth';
-import { addActivity } from '@/lib/activity';
 import styles from './NewPatient.module.css';
 
 export default function NewPatientPage() {
@@ -43,11 +42,9 @@ export default function NewPatientPage() {
     setLoading(true);
 
     try {
-      const response = await axiosClient.post('/api/patients', formData);
-      const createdPatient = response.data;
+      await axiosClient.post('/api/patients', formData);
 
-      // Log activity with patient ID
-      addActivity('created', formData.name, createdPatient.id);
+      // Activity is automatically logged via Kafka
 
       setSuccess(true);
       setTimeout(() => {

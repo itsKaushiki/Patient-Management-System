@@ -2,8 +2,9 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import axios from 'axios';
-import { setToken } from '@/lib/auth';
+import { setToken, setUserInfo } from '@/lib/auth';
 import styles from './Login.module.css';
 
 export default function LoginPage() {
@@ -19,13 +20,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:4004/auth/login', {
+      // Login to get token
+      const loginResponse = await axios.post('http://localhost:4004/auth/login', {
         email,
         password,
       });
 
-      const token = response.data.token;
+      const token = loginResponse.data.token;
       setToken(token);
+
+      // Validate token to get user info
+      const validateResponse = await axios.get('http://localhost:4004/auth/validate', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Store user info
+      setUserInfo({
+        email: validateResponse.data.email,
+        name: email.split('@')[0], // Temporary: use email prefix as name
+        role: validateResponse.data.role,
+      });
+
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -74,6 +91,12 @@ export default function LoginPage() {
           <button type="submit" className={styles.button} disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <Link href="/register" style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+              Don't have an account? Register
+            </Link>
+          </div>
         </form>
       </div>
     </div>

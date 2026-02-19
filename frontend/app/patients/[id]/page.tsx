@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
-import { addActivity } from '@/lib/activity';
+import { getUserInfo } from '@/lib/auth';
 import DeleteModal from '@/components/DeleteModal';
 import styles from './PatientDetails.module.css';
 
@@ -29,8 +29,15 @@ export default function PatientDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
 
   useEffect(() => {
+    // Get user role
+    const userInfo = getUserInfo();
+    if (userInfo) {
+      setUserRole(userInfo.role);
+    }
+
     const fetchPatient = async () => {
       try {
         setLoading(true);
@@ -89,8 +96,7 @@ export default function PatientDetailsPage() {
     try {
       await axiosClient.delete(`/api/patients/${patientId}`);
 
-      // Log activity with patient ID
-      addActivity('deleted', patient.name, patientId);
+      // Activity is automatically logged via Kafka
 
       // Close modal and redirect
       setShowDeleteModal(false);
@@ -124,12 +130,18 @@ export default function PatientDetailsPage() {
           ← Back to Patients
         </Link>
         <div className={styles.actions}>
-          <Link href={`/patients/${patientId}/edit`} className={styles.editButton}>
-            Edit Patient
-          </Link>
-          <button onClick={handleDeleteClick} className={styles.deleteButton}>
-            Delete Patient
-          </button>
+          {/* ADMIN and DOCTOR can edit patients */}
+          {(userRole === 'ADMIN' || userRole === 'DOCTOR') && (
+            <Link href={`/patients/${patientId}/edit`} className={styles.editButton}>
+              Edit Patient
+            </Link>
+          )}
+          {/* Only ADMIN can delete patients */}
+          {userRole === 'ADMIN' && (
+            <button onClick={handleDeleteClick} className={styles.deleteButton}>
+              Delete Patient
+            </button>
+          )}
         </div>
       </div>
 

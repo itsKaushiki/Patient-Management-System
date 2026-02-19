@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isAuthenticated, removeToken } from '@/lib/auth';
+import { isAuthenticated, removeToken, getUserInfo } from '@/lib/auth';
 import axiosClient from '@/lib/axios';
-import { getRecentActivities, formatActivityMessage, getRelativeTime, Activity } from '@/lib/activity';
+import { getRecentActivities, formatActivityMessage, getRelativeTime, getActivityType, Activity } from '@/lib/activity';
 import ClientOnly from '@/components/ClientOnly';
+import ThemeToggle from '@/components/ThemeToggle';
+import UserProfile from '@/components/UserProfile';
 import styles from './Dashboard.module.css';
 
 interface Patient {
@@ -22,11 +24,18 @@ export default function DashboardPage() {
   const [totalPatients, setTotalPatients] = useState(0);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/login');
       return;
+    }
+
+    // Get user role
+    const userInfo = getUserInfo();
+    if (userInfo) {
+      setUserRole(userInfo.role);
     }
 
     const fetchPatients = async () => {
@@ -40,14 +49,17 @@ export default function DashboardPage() {
       }
     };
 
-    fetchPatients();
+    const fetchActivities = async () => {
+      const activities = await getRecentActivities(3);
+      setActivities(activities);
+    };
 
-    // Load activities initially (only 3 for preview)
-    setActivities(getRecentActivities(3));
+    fetchPatients();
+    fetchActivities();
 
     // Auto-refresh activities every 5 seconds
     const interval = setInterval(() => {
-      setActivities(getRecentActivities(3));
+      fetchActivities();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -62,7 +74,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  const getActivityDotClass = (type: Activity['type']) => {
+  const getActivityDotClass = (type: 'created' | 'updated' | 'deleted') => {
     switch (type) {
       case 'created':
         return styles.dotGreen;
@@ -76,27 +88,25 @@ export default function DashboardPage() {
   };
 
   const formatActivityText = (activity: Activity) => {
-    switch (activity.type) {
-      case 'created':
-        return `${activity.name} was registered`;
-      case 'updated':
-        return `${activity.name} was updated`;
-      case 'deleted':
-        return `${activity.name} was deleted`;
-      default:
-        return activity.name;
-    }
+    return formatActivityMessage(activity);
   };
 
   return (
     <ClientOnly>
       <div className={styles.pageContainer}>
         <div className={styles.header}>
-          <h1 className={styles.title}>Patient Management System</h1>
-          <p className={styles.subtitle}>System monitoring console</p>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+          <div className={styles.headerContent}>
+            <div>
+              <h1 className={styles.title}>Patient Management System</h1>
+              <p className={styles.subtitle}>System monitoring console</p>
+            </div>
+            <div className={styles.headerActions}>
+              <ThemeToggle />
+              <ClientOnly>
+                <UserProfile />
+              </ClientOnly>
+            </div>
+          </div>
         </div>
 
         {/* Dashboard Stats Grid */}
@@ -123,7 +133,7 @@ export default function DashboardPage() {
                 <div className={styles.activityPreview}>
                   {activities.slice(0, 3).map((activity, index) => (
                     <div key={index} className={styles.activityRow}>
-                      <div className={`${styles.activityDot} ${getActivityDotClass(activity.type)}`}></div>
+                      <div className={`${styles.activityDot} ${getActivityDotClass(getActivityType(activity))}`}></div>
                       <div className={styles.activityDetails}>
                         <div className={styles.activityText}>
                           {formatActivityText(activity)}
@@ -154,12 +164,35 @@ export default function DashboardPage() {
               </p>
             </Link>
 
-            <Link href="/patients/new" className={styles.navCard}>
-              <h2 className={styles.navTitle}>Add New Patient</h2>
-              <p className={styles.navDescription}>
-                Register a new patient in the system
-              </p>
-            </Link>
+            {/* Only ADMIN and RECEPTIONIST can add new patients */}
+            {(userRole === 'ADMIN' || userRole === 'RECEPTIONIST') && (
+              <Link href="/patients/new" className={styles.navCard}>
+                <h2 className={styles.navTitle}>Add New Patient</h2>
+                <p className={styles.navDescription}>
+                  Register a new patient in the system
+                </p>
+              </Link>
+            )}
+
+            {/* Show a different card for DOCTOR role */}
+            {userRole === 'DOCTOR' && (
+              <div className={styles.navCard} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                <h2 className={styles.navTitle}>Add New Patient</h2>
+                <p className={styles.navDescription}>
+                  ⚠️ Only ADMIN and RECEPTIONIST can register patients
+                </p>
+              </div>
+            )}
+
+            {/* Only ADMIN can access User Management */}
+            {userRole === 'ADMIN' && (
+              <Link href="/admin/users" className={styles.navCard}>
+                <h2 className={styles.navTitle}>User Management</h2>
+                <p className={styles.navDescription}>
+                  Manage user roles and permissions (ADMIN only)
+                </p>
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 package com.pm.authservice.service;
 
 import com.pm.authservice.dto.LoginRequestDTO;
+import com.pm.authservice.dto.ValidateResponseDTO;
 import com.pm.authservice.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import java.util.Optional;
@@ -36,6 +37,17 @@ public class AuthService {
       return true;
     } catch (JwtException e){
       return false;
+    }
+  }
+
+  public ValidateResponseDTO validateTokenWithDetails(String token) {
+    try {
+      jwtUtil.validateToken(token);
+      String email = jwtUtil.getEmailFromToken(token);
+      String role = jwtUtil.getRoleFromToken(token);
+      return new ValidateResponseDTO(email, role, true);
+    } catch (JwtException e){
+      return new ValidateResponseDTO(null, null, false);
     }
   }
 }

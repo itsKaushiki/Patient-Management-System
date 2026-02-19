@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, getUserInfo } from '@/lib/auth';
 import ClientOnly from '@/components/ClientOnly';
 import styles from './Patients.module.css';
 
@@ -25,11 +25,18 @@ export default function PatientsPage() {
   const [displayCount, setDisplayCount] = useState(5);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/login');
       return;
+    }
+
+    // Get user role
+    const userInfo = getUserInfo();
+    if (userInfo) {
+      setUserRole(userInfo.role);
     }
 
     const fetchPatients = async () => {
@@ -85,9 +92,12 @@ export default function PatientsPage() {
           <Link href="/dashboard" className={styles.backLink}>
             ← Back to Dashboard
           </Link>
-          <Link href="/patients/new" className={styles.addButton}>
-            + Add Patient
-          </Link>
+          {/* Only ADMIN and RECEPTIONIST can add patients */}
+          {(userRole === 'ADMIN' || userRole === 'RECEPTIONIST') && (
+            <Link href="/patients/new" className={styles.addButton}>
+              + Add Patient
+            </Link>
+          )}
         </div>
       </div>
 
