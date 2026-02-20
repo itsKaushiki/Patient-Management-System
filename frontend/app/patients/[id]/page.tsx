@@ -16,6 +16,7 @@ interface Patient {
   dateOfBirth: string;
   gender?: string;
   bloodGroup?: string;
+  age?: number;
 }
 
 export default function PatientDetailsPage() {
@@ -169,6 +170,12 @@ export default function PatientDetailsPage() {
               <span className={styles.infoLabel}>Date of Birth</span>
               <span className={styles.infoValue}>{patient.dateOfBirth}</span>
             </div>
+            {patient.age !== undefined && (
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>Age</span>
+                <span className={styles.infoValue}>{patient.age} years</span>
+              </div>
+            )}
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Gender</span>
               <span className={styles.infoValue}>{patient.gender || 'Not specified'}</span>

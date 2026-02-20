@@ -2,6 +2,7 @@ package com.pm.patientservice.service;
 
 import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
+import com.pm.patientservice.dto.PatientStatisticsDTO;
 import com.pm.patientservice.exception.EmailAlreadyExistsException;
 import com.pm.patientservice.exception.PatientNotFoundException;
 import com.pm.patientservice.grpc.BillingServiceGrpcClient;
@@ -11,7 +12,11 @@ import com.pm.patientservice.model.Patient;
 import com.pm.patientservice.repository.PatientRepository;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,7 +34,12 @@ public class PatientService {
     this.kafkaProducer = kafkaProducer;
   }
 
-  public List<PatientResponseDTO> getPatients() {
+  public Page<PatientResponseDTO> getPatients(Pageable pageable) {
+    Page<Patient> patientsPage = patientRepository.findAll(pageable);
+    return patientsPage.map(PatientMapper::toDTO);
+  }
+
+  public List<PatientResponseDTO> getAllPatients() {
     List<Patient> patients = patientRepository.findAll();
 
     return patients.stream().map(PatientMapper::toDTO).toList();
@@ -99,4 +109,40 @@ public class PatientService {
 
     return PatientMapper.toDTO(patient);
   }
+
+  public Page<PatientResponseDTO> searchPatients(String name, String email, String phone,
+                                                  String query, Pageable pageable) {
+    Page<Patient> patientsPage;
+
+    if (query != null && !query.trim().isEmpty()) {
+      // Search across multiple fields
+      patientsPage = patientRepository.searchByMultipleFields(query.trim(), pageable);
+    } else if (name != null && !name.trim().isEmpty()) {
+      patientsPage = patientRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+    } else if (email != null && !email.trim().isEmpty()) {
+      patientsPage = patientRepository.findByEmailContainingIgnoreCase(email.trim(), pageable);
+    } else {
+      // If no search criteria, return all with pagination
+      patientsPage = patientRepository.findAll(pageable);
+    }
+
+    return patientsPage.map(PatientMapper::toDTO);
+  }
+
+  public PatientStatisticsDTO getPatientStatistics() {
+    List<Patient> patients = patientRepository.findAll();
+
+    // Count by gender
+    Map<String, Long> byGender = patients.stream()
+        .filter(p -> p.getGender() != null && !p.getGender().isEmpty())
+        .collect(Collectors.groupingBy(Patient::getGender, Collectors.counting()));
+
+    // Count by blood group
+    Map<String, Long> byBloodGroup = patients.stream()
+        .filter(p -> p.getBloodGroup() != null && !p.getBloodGroup().isEmpty())
+        .collect(Collectors.groupingBy(Patient::getBloodGroup, Collectors.counting()));
+
+    return new PatientStatisticsDTO(byGender, byBloodGroup);
+  }
+
 }

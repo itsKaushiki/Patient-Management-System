@@ -8,6 +8,7 @@ public class PatientResponseDTO {
   private String dateOfBirth;
   private String gender;
   private String bloodGroup;
+  private Integer age;
 
   public String getId() {
     return id;
@@ -63,6 +64,14 @@ public class PatientResponseDTO {
 
   public void setBloodGroup(String bloodGroup) {
     this.bloodGroup = bloodGroup;
+  }
+
+  public Integer getAge() {
+    return age;
+  }
+
+  public void setAge(Integer age) {
+    this.age = age;
   }
 
 }

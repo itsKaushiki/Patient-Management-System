@@ -4,6 +4,7 @@ import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
 import com.pm.patientservice.model.Patient;
 import java.time.LocalDate;
+import java.time.Period;
 
 public class PatientMapper {
   public static PatientResponseDTO toDTO(Patient patient) {
@@ -15,6 +16,10 @@ public class PatientMapper {
     patientDTO.setDateOfBirth(patient.getDateOfBirth().toString());
     patientDTO.setGender(patient.getGender());
     patientDTO.setBloodGroup(patient.getBloodGroup());
+
+    // Calculate age from date of birth
+    int age = Period.between(patient.getDateOfBirth(), LocalDate.now()).getYears();
+    patientDTO.setAge(age);
 
     return patientDTO;
   }

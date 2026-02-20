@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axiosClient from '@/lib/axios';
@@ -15,17 +15,44 @@ interface Patient {
   address: string;
   dateOfBirth: string;
   registeredDate?: string;
+  age?: number;
 }
+
+interface PageResponse {
+  content: Patient[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+type SortOption = 'name-asc' | 'name-desc' | 'email-asc' | 'email-desc' | 'dob-asc' | 'dob-desc' | 'registered-asc' | 'registered-desc';
 
 export default function PatientsPage() {
   const router = useRouter();
-  const [allPatients, setAllPatients] = useState<Patient[]>([]);
-  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [displayCount, setDisplayCount] = useState(5);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>('name-asc');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -39,45 +66,67 @@ export default function PatientsPage() {
       setUserRole(userInfo.role);
     }
 
-    const fetchPatients = async () => {
-      try {
-        const response = await axiosClient.get('/api/patients');
-        setAllPatients(response.data);
-        setFilteredPatients(response.data);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load patients');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPatients();
-  }, [router]);
+  }, [router, currentPage, sortOption, debouncedSearchQuery]);
 
-  // Handle search filtering
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredPatients(allPatients);
-      setDisplayCount(5);
-      return;
+  // Fetch patients with pagination and search
+  const fetchPatients = useCallback(async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Parse sort option
+      const [sortBy, sortDirection] = sortOption.split('-');
+      const sortField = sortBy === 'dob' ? 'dateOfBirth' : sortBy === 'registered' ? 'registeredDate' : sortBy;
+
+      let response: { data: PageResponse };
+
+      if (debouncedSearchQuery.trim()) {
+        // Use search endpoint with sorting
+        response = await axiosClient.get('/api/patients/search', {
+          params: {
+            query: debouncedSearchQuery.trim(),
+            page: currentPage,
+            size: pageSize,
+            sortBy: sortField,
+            sortDirection: sortDirection
+          }
+        });
+      } else {
+        // Use pagination endpoint with sorting
+        response = await axiosClient.get('/api/patients', {
+          params: {
+            page: currentPage,
+            size: pageSize,
+            sortBy: sortField,
+            sortDirection: sortDirection
+          }
+        });
+      }
+
+      setPatients(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load patients');
+    } finally {
+      setLoading(false);
     }
+  }, [currentPage, pageSize, sortOption, debouncedSearchQuery]);
 
-    const query = searchQuery.toLowerCase();
-    const filtered = allPatients.filter(
-      (patient) =>
-        patient.name.toLowerCase().includes(query) ||
-        patient.email.toLowerCase().includes(query)
-    );
-    setFilteredPatients(filtered);
-    setDisplayCount(5); // Reset pagination when searching
-  }, [searchQuery, allPatients]);
-
-  const handleLoadMore = () => {
-    setDisplayCount((prev) => prev + 5);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(0); // Reset to first page on search
   };
 
-  const patientsToDisplay = filteredPatients.slice(0, displayCount);
-  const hasMore = displayCount < filteredPatients.length;
+  const handleSortChange = (option: SortOption) => {
+    setSortOption(option);
+    setCurrentPage(0); // Reset to first page on sort change
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   if (!isAuthenticated()) {
     return null;
@@ -105,33 +154,53 @@ export default function PatientsPage() {
 
       {error && <div className={styles.error}>{error}</div>}
 
-      {!loading && !error && allPatients.length === 0 && (
+      {!loading && !error && totalElements === 0 && !searchQuery && (
         <div className={styles.empty}>No patients found. Add your first patient!</div>
       )}
 
-      {!loading && !error && allPatients.length > 0 && (
+      {!loading && !error && (totalElements > 0 || searchQuery) && (
         <>
-          {/* Search Bar */}
+          {/* Search and Sort Bar */}
           <div className={styles.searchContainer}>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search by name or email"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               className={styles.searchInput}
             />
+            <select
+              value={sortOption}
+              onChange={(e) => handleSortChange(e.target.value as SortOption)}
+              className={styles.sortSelect}
+            >
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="email-asc">Email (A-Z)</option>
+              <option value="email-desc">Email (Z-A)</option>
+              <option value="dob-asc">Date of Birth (Oldest)</option>
+              <option value="dob-desc">Date of Birth (Newest)</option>
+              <option value="registered-asc">Registration (Oldest)</option>
+              <option value="registered-desc">Registration (Newest)</option>
+            </select>
+          </div>
+
+          {/* Results info */}
+          <div className={styles.resultsInfo}>
+            Showing {patients.length > 0 ? currentPage * pageSize + 1 : 0} - {currentPage * pageSize + patients.length} of {totalElements} patients
           </div>
 
           {/* Empty search state */}
-          {filteredPatients.length === 0 && (
+          {patients.length === 0 && searchQuery && (
             <div className={styles.empty}>No patients match your search</div>
           )}
 
           {/* Patient Grid */}
-          {filteredPatients.length > 0 && (
+          {patients.length > 0 && (
             <>
               <div className={styles.grid}>
-                {patientsToDisplay.map((patient) => (
+                {patients.map((patient) => (
             <div
               key={patient.id}
               className={styles.card}
@@ -151,16 +220,36 @@ export default function PatientsPage() {
                   <span className={styles.infoLabel}>Date of Birth:</span>
                   <span className={styles.infoValue}>{patient.dateOfBirth}</span>
                 </div>
+                {patient.age !== undefined && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Age:</span>
+                    <span className={styles.infoValue}>{patient.age} years</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Load More Button */}
-        {hasMore && (
-          <div className={styles.loadMoreContainer}>
-            <button onClick={handleLoadMore} className={styles.loadMoreButton}>
-              Load More
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className={styles.paginationContainer}>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className={styles.paginationButton}
+            >
+              Previous
+            </button>
+            <span className={styles.pageInfo}>
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+              className={styles.paginationButton}
+            >
+              Next
             </button>
           </div>
         )}

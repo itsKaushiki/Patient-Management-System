@@ -3,25 +3,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isAuthenticated, removeToken, getUserInfo } from '@/lib/auth';
+import { isAuthenticated, getUserInfo } from '@/lib/auth';
 import axiosClient from '@/lib/axios';
 import { getRecentActivities, formatActivityMessage, getRelativeTime, getActivityType, Activity } from '@/lib/activity';
 import ClientOnly from '@/components/ClientOnly';
 import ThemeToggle from '@/components/ThemeToggle';
 import UserProfile from '@/components/UserProfile';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import styles from './Dashboard.module.css';
 
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  address: string;
-  dateOfBirth: string;
+interface PatientStatistics {
+  byGender: Record<string, number>;
+  byBloodGroup: Record<string, number>;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [totalPatients, setTotalPatients] = useState(0);
+  const [statistics, setStatistics] = useState<PatientStatistics | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
@@ -40,12 +39,21 @@ export default function DashboardPage() {
 
     const fetchPatients = async () => {
       try {
-        const response = await axiosClient.get('/api/patients');
+        const response = await axiosClient.get('/api/patients/all');
         setTotalPatients(response.data.length);
       } catch (err) {
         console.error('Failed to load patients:', err);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const fetchStatistics = async () => {
+      try {
+        const response = await axiosClient.get('/api/patients/statistics');
+        setStatistics(response.data);
+      } catch (err) {
+        console.error('Failed to load statistics:', err);
       }
     };
 
@@ -55,6 +63,7 @@ export default function DashboardPage() {
     };
 
     fetchPatients();
+    fetchStatistics();
     fetchActivities();
 
     // Auto-refresh activities every 5 seconds
@@ -64,11 +73,6 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, [router]);
-
-  const handleLogout = () => {
-    removeToken();
-    router.push('/login');
-  };
 
   if (!isAuthenticated()) {
     return null;
@@ -90,6 +94,19 @@ export default function DashboardPage() {
   const formatActivityText = (activity: Activity) => {
     return formatActivityMessage(activity);
   };
+
+  // Prepare data for pie charts
+  const genderData = statistics?.byGender
+    ? Object.entries(statistics.byGender).map(([name, value]) => ({ name, value }))
+    : [];
+
+  const bloodGroupData = statistics?.byBloodGroup
+    ? Object.entries(statistics.byBloodGroup).map(([name, value]) => ({ name, value }))
+    : [];
+
+  // Colors for pie charts
+  const GENDER_COLORS = ['#2563EB', '#EC4899', '#10B981', '#F59E0B'];
+  const BLOOD_GROUP_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#14B8A6', '#3B82F6', '#8B5CF6', '#EC4899', '#F97316'];
 
   return (
     <ClientOnly>
@@ -121,6 +138,68 @@ export default function DashboardPage() {
                 <div className={styles.cardNumber}>{totalPatients}</div>
               )}
             </div>
+          </div>
+
+          {/* Gender Distribution Card */}
+          <div className={styles.dashboardCard}>
+            <h3 className={styles.cardLabel}>Gender Distribution</h3>
+            {loading || !statistics ? (
+              <div className={styles.cardLoading}>Loading...</div>
+            ) : genderData.length === 0 ? (
+              <div className={styles.emptyActivity}>No gender data available</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={genderData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {genderData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {/* Blood Group Distribution Card */}
+          <div className={styles.dashboardCard}>
+            <h3 className={styles.cardLabel}>Blood Group Distribution</h3>
+            {loading || !statistics ? (
+              <div className={styles.cardLoading}>Loading...</div>
+            ) : bloodGroupData.length === 0 ? (
+              <div className={styles.emptyActivity}>No blood group data available</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={bloodGroupData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {bloodGroupData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={BLOOD_GROUP_COLORS[index % BLOOD_GROUP_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           {/* Activity Timeline Card */}

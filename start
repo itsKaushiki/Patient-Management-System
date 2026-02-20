@@ -21,14 +21,10 @@ echo -e "${GREEN}========================================${NC}"
 # Create logs directory
 mkdir -p "$LOGS_DIR"
 
-# Clean all target directories
-echo -e "${YELLOW}Cleaning all service target directories...${NC}"
-for service in auth-service patient-service billing-service analytics-service api-gateway; do
-    rm -rf "$service/target"
-done
-# Also clean up any leftover protoc-dependencies that might cause issues
-rm -rf billing-service/target/protoc-dependencies 2>/dev/null || true
-echo -e "${GREEN}✓ All target directories cleaned${NC}"
+# Note: We don't clean target directories here because:
+# 1. It removes compiled protobuf classes
+# 2. The compile step in start_service() will handle incremental builds
+# If you need a clean build, run: ./mvnw clean in each service directory
 
 # Function to check if Colima is running
 check_colima() {
@@ -112,14 +108,24 @@ start_service() {
     local service_name=$1
     local service_dir=$2
     local port=$3
-    
-    echo -e "${YELLOW}Starting $service_name...${NC}"
-    
+
+    echo -e "${YELLOW}Compiling $service_name...${NC}"
+
     cd "$service_dir"
+    # Compile the service first to ensure protobuf classes are generated
+    ./mvnw compile > "../$LOGS_DIR/$service_name-compile.log" 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Failed to compile $service_name. Check $LOGS_DIR/$service_name-compile.log${NC}"
+        cd - > /dev/null
+        exit 1
+    fi
+    echo -e "${GREEN}✓ $service_name compiled${NC}"
+
+    echo -e "${YELLOW}Starting $service_name...${NC}"
     ./mvnw spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments="--server.port=$port" > "../$LOGS_DIR/$service_name.log" 2>&1 &
     local pid=$!
     cd - > /dev/null
-    
+
     echo "$service_name:$pid" >> "../$PIDS_FILE"
     echo -e "${GREEN}✓ $service_name started (PID: $pid)${NC}"
 }

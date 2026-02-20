@@ -2,6 +2,7 @@ package com.pm.patientservice.controller;
 
 import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
+import com.pm.patientservice.dto.PatientStatisticsDTO;
 import com.pm.patientservice.dto.validators.CreatePatientValidationGroup;
 import com.pm.patientservice.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +10,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.groups.Default;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,9 +38,26 @@ public class PatientController {
   }
 
   @GetMapping
-  @Operation(summary = "Get Patients")
-  public ResponseEntity<List<PatientResponseDTO>> getPatients() {
-    List<PatientResponseDTO> patients = patientService.getPatients();
+  @Operation(summary = "Get Patients with Pagination")
+  public ResponseEntity<Page<PatientResponseDTO>> getPatients(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "asc") String sortDirection) {
+
+    Sort.Direction direction = sortDirection.equalsIgnoreCase("desc")
+        ? Sort.Direction.DESC
+        : Sort.Direction.ASC;
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    Page<PatientResponseDTO> patients = patientService.getPatients(pageable);
+    return ResponseEntity.ok().body(patients);
+  }
+
+  @GetMapping("/all")
+  @Operation(summary = "Get All Patients (No Pagination)")
+  public ResponseEntity<List<PatientResponseDTO>> getAllPatients() {
+    List<PatientResponseDTO> patients = patientService.getAllPatients();
     return ResponseEntity.ok().body(patients);
   }
 
@@ -73,5 +96,33 @@ public class PatientController {
   public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
     patientService.deletePatient(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/search")
+  @Operation(summary = "Search Patients by Name, Email, or Phone")
+  public ResponseEntity<Page<PatientResponseDTO>> searchPatients(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String email,
+      @RequestParam(required = false) String phone,
+      @RequestParam(required = false) String query,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "asc") String sortDirection) {
+
+    Sort.Direction direction = sortDirection.equalsIgnoreCase("desc")
+        ? Sort.Direction.DESC
+        : Sort.Direction.ASC;
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    Page<PatientResponseDTO> patients = patientService.searchPatients(name, email, phone, query, pageable);
+    return ResponseEntity.ok().body(patients);
+  }
+
+  @GetMapping("/statistics")
+  @Operation(summary = "Get Patient Statistics")
+  public ResponseEntity<PatientStatisticsDTO> getPatientStatistics() {
+    PatientStatisticsDTO statistics = patientService.getPatientStatistics();
+    return ResponseEntity.ok().body(statistics);
   }
 }
