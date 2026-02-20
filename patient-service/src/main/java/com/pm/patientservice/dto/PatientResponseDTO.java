@@ -9,6 +9,8 @@ public class PatientResponseDTO {
   private String gender;
   private String bloodGroup;
   private Integer age;
+  private Boolean isDeleted;
+  private String deletedAt;
 
   public String getId() {
     return id;
@@ -72,6 +74,22 @@ public class PatientResponseDTO {
 
   public void setAge(Integer age) {
     this.age = age;
+  }
+
+  public Boolean getIsDeleted() {
+    return isDeleted;
+  }
+
+  public void setIsDeleted(Boolean isDeleted) {
+    this.isDeleted = isDeleted;
+  }
+
+  public String getDeletedAt() {
+    return deletedAt;
+  }
+
+  public void setDeletedAt(String deletedAt) {
+    this.deletedAt = deletedAt;
   }
 
 }

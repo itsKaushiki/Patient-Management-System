@@ -21,6 +21,10 @@ public class PatientMapper {
     int age = Period.between(patient.getDateOfBirth(), LocalDate.now()).getYears();
     patientDTO.setAge(age);
 
+    // Soft delete fields
+    patientDTO.setIsDeleted(patient.getIsDeleted());
+    patientDTO.setDeletedAt(patient.getDeletedAt() != null ? patient.getDeletedAt().toString() : null);
+
     return patientDTO;
   }
 

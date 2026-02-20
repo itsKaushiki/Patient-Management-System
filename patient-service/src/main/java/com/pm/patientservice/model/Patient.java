@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -37,6 +38,12 @@ public class Patient {
 
   @Column(length = 3)
   private String bloodGroup;
+
+  // Soft Delete fields
+  @Column(nullable = false)
+  private Boolean isDeleted = false;
+
+  private LocalDateTime deletedAt;
 
   public UUID getId() {
     return id;
@@ -100,6 +107,22 @@ public class Patient {
 
   public void setBloodGroup(String bloodGroup) {
     this.bloodGroup = bloodGroup;
+  }
+
+  public Boolean getIsDeleted() {
+    return isDeleted;
+  }
+
+  public void setIsDeleted(Boolean isDeleted) {
+    this.isDeleted = isDeleted;
+  }
+
+  public LocalDateTime getDeletedAt() {
+    return deletedAt;
+  }
+
+  public void setDeletedAt(LocalDateTime deletedAt) {
+    this.deletedAt = deletedAt;
   }
 
 }

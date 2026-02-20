@@ -92,10 +92,17 @@ public class PatientController {
   }
 
   @DeleteMapping("/{id}")
-  @Operation(summary = "Delete a Patient")
+  @Operation(summary = "Soft Delete a Patient", description = "Marks patient as deleted without removing from database")
   public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
     patientService.deletePatient(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @PutMapping("/{id}/restore")
+  @Operation(summary = "Restore a Deleted Patient", description = "Restores a soft-deleted patient")
+  public ResponseEntity<Void> restorePatient(@PathVariable UUID id) {
+    patientService.restorePatient(id);
+    return ResponseEntity.ok().build();
   }
 
   @GetMapping("/search")

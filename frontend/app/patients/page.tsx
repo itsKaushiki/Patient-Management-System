@@ -16,6 +16,8 @@ interface Patient {
   dateOfBirth: string;
   registeredDate?: string;
   age?: number;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
 }
 
 interface PageResponse {
@@ -44,6 +46,7 @@ export default function PatientsPage() {
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<string>('RECEPTIONIST');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [restoringPatientId, setRestoringPatientId] = useState<string | null>(null);
 
   // Debounce search query
   useEffect(() => {
@@ -128,6 +131,30 @@ export default function PatientsPage() {
     setCurrentPage(newPage);
   };
 
+  const handleRestorePatient = async (patientId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click navigation
+
+    if (!confirm('Are you sure you want to restore this patient?')) {
+      return;
+    }
+
+    setRestoringPatientId(patientId);
+
+    try {
+      await axiosClient.put(`/api/patients/${patientId}/restore`);
+
+      // Refresh the patient list
+      await fetchPatients();
+
+      alert('Patient restored successfully!');
+    } catch (err: any) {
+      console.error('Failed to restore patient:', err);
+      alert(err.response?.data?.message || 'Failed to restore patient');
+    } finally {
+      setRestoringPatientId(null);
+    }
+  };
+
   if (!isAuthenticated()) {
     return null;
   }
@@ -203,10 +230,15 @@ export default function PatientsPage() {
                 {patients.map((patient) => (
             <div
               key={patient.id}
-              className={styles.card}
+              className={`${styles.card} ${patient.isDeleted ? styles.deletedCard : ''}`}
               onClick={() => router.push(`/patients/${patient.id}`)}
             >
-              <h3 className={styles.cardTitle}>{patient.name}</h3>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>{patient.name}</h3>
+                {patient.isDeleted && (
+                  <span className={styles.deletedBadge}>Deleted</span>
+                )}
+              </div>
               <div className={styles.cardInfo}>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Email:</span>
@@ -226,7 +258,26 @@ export default function PatientsPage() {
                     <span className={styles.infoValue}>{patient.age} years</span>
                   </div>
                 )}
+                {patient.isDeleted && patient.deletedAt && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Deleted At:</span>
+                    <span className={styles.infoValue}>
+                      {new Date(patient.deletedAt).toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Restore button - Only visible to ADMIN for deleted patients */}
+              {userRole === 'ADMIN' && patient.isDeleted && (
+                <button
+                  onClick={(e) => handleRestorePatient(patient.id, e)}
+                  disabled={restoringPatientId === patient.id}
+                  className={styles.restoreButton}
+                >
+                  {restoringPatientId === patient.id ? 'Restoring...' : '↻ Restore Patient'}
+                </button>
+              )}
             </div>
           ))}
         </div>
